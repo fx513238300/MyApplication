@@ -1,0 +1,9 @@
+<resources>//注册字符串
+    <string name="app_name">My Application</string>
+    //名字 内容 前面变成变量@string....
+    <string name="str1">Feng Xi</string>
+    <string name="str2">冯茜</string>
+    <string name="score">score</string>
+    <string name="setting">setting</string>
+</resources>
+
