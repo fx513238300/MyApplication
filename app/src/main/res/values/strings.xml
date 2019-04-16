@@ -5,5 +5,9 @@
     <string name="str2">冯茜</string>
     <string name="score">score</string>
     <string name="setting">setting</string>
+    <string name="Save">Save</string>
+    <string name="CONFIG">CONGIF</string>
+    <string name="WON">WON</string>
+    <string name="EURO">EURO</string>
 </resources>
 
