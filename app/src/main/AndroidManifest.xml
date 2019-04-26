@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity" />
         <activity android:name=".BsketballActivity" />
-        <activity android:name=".TwoActivity">
+        <activity android:name=".TwoActivity" >//运行方向固定： android:screenOrientation="landscape"
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,3 +27,4 @@
     </application>
 
 </manifest>
+
