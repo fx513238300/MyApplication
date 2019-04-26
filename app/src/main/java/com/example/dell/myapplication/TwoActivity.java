@@ -45,12 +45,9 @@ public class TwoActivity extends AppCompatActivity {
         int newscore=Integer.parseInt(oldscore)+i;
         score.setText(""+newscore);
 
-    }
-    private void showb(int i){
+    }  private void showb(int i){
         Log.i("show","i="+i);
         String oldscore=(String)scoreb.getText();
         int newscore=Integer.parseInt(oldscore)+i;
-        scoreb.setText(""+newscore);
-
-    }
+        scoreb.setText(""+newscore);}
 }
