@@ -9,5 +9,7 @@
     <string name="CONFIG">CONGIF</string>
     <string name="WON">WON</string>
     <string name="EURO">EURO</string>
+    <string name="label_open_list">OpenList</string>
+    <string name="rmb_hint_label">Input RMB</string>
 </resources>
 

@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MoneyActivity extends AppCompatActivity implements Runnable {
     EditText rmb;
@@ -36,6 +39,8 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
     private float dollarrate = 0.1f;
     private float eurorate = 0.2f;
     private float wonrate = 0.3f;
+    private String updateDate="";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +55,29 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
         dollarrate = sharedpreferences.getFloat("dolla_rate", 0.0f);
         eurorate = sharedpreferences.getFloat("euro_rate", 0.0f);
         wonrate = sharedpreferences.getFloat("won_rate", 0.0f);
+        updateDate=sharedpreferences.getString("update_date","");
+        //获取当前系统时间
+       Date today= Calendar.getInstance().getTime();
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+        final String todayStr=sdf.format(today);
+
         Log.i(TAG, "onnCreate:sp dollarrate=" + dollarrate);
         Log.i(TAG, "onnCreate:sp eurorate=" + eurorate);
         Log.i(TAG, "onnCreate:sp wonrate=" + wonrate);
+        Log.i(TAG, "onnCreate:sp updateDate=" + updateDate);
+        Log.i(TAG, "onnCreate:todayStr=" + todayStr);
 
-        //开启子线程
-        Thread t = new Thread(this);
-        t.start();
+
+        //判断时间
+        if(!todayStr.equals(updateDate)){
+            Log.i(TAG, "onnCreate:需要更新" );
+            //开启子线程
+            Thread t = new Thread(this);
+            t.start();
+        }else{
+            Log.i(TAG, "onnCreate:不需要更新" );
+        }
+
 
         handler = new Handler() {
             @Override
@@ -70,6 +91,15 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
                     Log.i(TAG, "handleMessage:dollarrate:" + dollarrate);
                     Log.i(TAG, "handleMessage:eurorate:" + eurorate);
                     Log.i(TAG, "handleMessage:wonrate:" + wonrate);
+
+                    //保存更新的日期
+                    SharedPreferences sharedpreferences = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedpreferences.edit();
+                    editor.putFloat("dollar_rate", dollarrate);
+                    editor.putFloat("euro_rate", eurorate);
+                    editor.putFloat("won_rate", wonrate);
+                    editor.putString("update_date",todayStr);
+                    editor.apply();
 
                     Toast.makeText(MoneyActivity.this, "汇率已更新", Toast.LENGTH_SHORT).show();
 
@@ -127,19 +157,28 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_set) {
-            Intent config = new Intent(this, ConfigActivity.class);
-            config.putExtra("dollar_rate_key", dollarrate);
-            config.putExtra("euro_rate_key", eurorate);
-            config.putExtra("won_rate_key", wonrate);
-            Log.i(TAG, "openOne:dollarrate" + dollarrate);
-            Log.i(TAG, "openOne:deurorate" + eurorate);
-            Log.i(TAG, "openOne:wonrate" + wonrate);
-            Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.jd.com"));
-            Intent tel = new Intent(Intent.ACTION_VIEW, Uri.parse("tel:17381564732"));
-            //startActivity(config);
-            startActivityForResult(config, 1);//任意整数
+            openConfig();
+        }
+        else if(item.getItemId()==R.id.open_list){
+            //打开列表窗口
+            Intent list = new Intent(this, MyList2Activity.class);
+            startActivity(list);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openConfig() {
+        Intent config = new Intent(this, ConfigActivity.class);
+        config.putExtra("dollar_rate_key", dollarrate);
+        config.putExtra("euro_rate_key", eurorate);
+        config.putExtra("won_rate_key", wonrate);
+        Log.i(TAG, "openOne:dollarrate" + dollarrate);
+        Log.i(TAG, "openOne:deurorate" + eurorate);
+        Log.i(TAG, "openOne:wonrate" + wonrate);
+        Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.jd.com"));
+        Intent tel = new Intent(Intent.ACTION_VIEW, Uri.parse("tel:17381564732"));
+        //startActivity(config);
+        startActivityForResult(config, 1);//任意整数
     }
 
     @Override
@@ -152,6 +191,8 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
             Log.i(TAG, "onActivityResult:dollarrate" + dollarrate);
             Log.i(TAG, "onActivityResult:deurorate" + eurorate);
             Log.i(TAG, "onActivityResult:wonrate" + wonrate);
+
+            //将新设置的汇率写到SP里
             SharedPreferences sharedpreferences = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedpreferences.edit();
             editor.putFloat("dollar_rate", dollarrate);
@@ -194,6 +235,60 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
             e.printStackTrace();
         }*/
 
+        bundle=getFormBOC();
+
+        //bundle中保存所获取的汇率
+        //获取msg对象，用于返回主线程
+        Message msg = handler.obtainMessage(5);
+        //msg.what=5;
+        //msg.obj = "Hello from run()";
+        msg.obj=bundle;
+        handler.sendMessage(msg);
+
+    }
+
+    private Bundle getFormBOC( ) {
+        Bundle bundle=new Bundle();
+        Document doc=null;
+        try{
+            doc = Jsoup.connect("http://www.boc.cn/sourcedb/whpj/").get();
+            //doc =Jsoup.parse(html);
+            Log.i(TAG, "run:" + doc.title());
+            Elements tables=doc.getElementsByTag("table");
+
+            /*for(Element table :tables){
+                Log.i(TAG,"run:table["+i+"]="+table);
+                i++;
+            }*/
+            Element table2=tables.get(1);//定位table
+            //获取TD中的数据
+            Elements tds = table2.getElementsByTag("td");
+            for(int i=0;i<tds.size();i+=8) {
+              Element td1=tds.get(i);
+                Element td2=tds.get(i+5);
+
+                String str1=td1.text();
+                String val=td2.text();
+                Log.i(TAG,"run:"+str1+"==>"+val);
+
+                if("美元".equals(str1)){
+                    bundle.putFloat("dollar-rate",100f/Float.parseFloat(val));
+                }else  if("欧元".equals(str1)){
+                    bundle.putFloat("euro-rate",100f/Float.parseFloat(val));
+                }else  if("韩国元".equals(str1)){
+                    bundle.putFloat("won-rate",100f/Float.parseFloat(val));
+                }
+
+            }
+
+        }
+        catch(IOException e)
+        { e.printStackTrace(); }
+        return bundle;
+    }
+
+    private Bundle getFormUsdCny( ) {
+        Bundle bundle=new Bundle();
         Document doc=null;
         try{
             doc = Jsoup.connect("http://www.usd-cny.com/bankofChina.htm").get();
@@ -206,11 +301,11 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
                 i++;
             }*/
             Element table6=tables.get(5);
-           // Log.i(TAG,"run:table6="+table6);
+            // Log.i(TAG,"run:table6="+table6);
             //获取TD中的数据
             Elements tds = table6.getElementsByTag("td");
             for(int i=0;i<tds.size();i+=8) {
-              Element td1=tds.get(i);
+                Element td1=tds.get(i);
                 Element td2=tds.get(i+5);
                 Log.i(TAG,"run:"+td1.text()+"==>"+td2.text());
                 String str1=td1.text();
@@ -229,20 +324,9 @@ public class MoneyActivity extends AppCompatActivity implements Runnable {
         }
         catch(IOException e)
         { e.printStackTrace(); }
-
-        //bundle中保存所获取的汇率
-        Message msg = handler.obtainMessage(5);
-        //msg.what=5;
-        //msg.obj = "Hello from run()";
-        msg.obj=bundle;
-        handler.sendMessage(msg);
-
+        return bundle;
     }
-
-
-
-
-        private String inputStream2String (InputStream inputStream)throws IOException {
+    private String inputStream2String (InputStream inputStream)throws IOException {
             final int bufferSize = 1024;
             final char[] buffer = new char[bufferSize];
             final StringBuilder out = new StringBuilder();

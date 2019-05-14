@@ -1,7 +1,7 @@
 package com.example.dell.myapplication;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -10,7 +10,7 @@ public class TwoActivity extends AppCompatActivity {
 
     TextView score;
     TextView scoreb;
-
+    private final String TAG = "TwoActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,6 +20,29 @@ public class TwoActivity extends AppCompatActivity {
         scoreb = (TextView)findViewById(R.id.scoreb);
 
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        String scorea=((TextView)findViewById(R.id.score)).getText().toString();
+        String scoreb=((TextView)findViewById(R.id.scoreb)).getText().toString();
+        Log.i(TAG,"onSaveInstanceState:");
+        outState.putString("teama_score",scorea);
+        outState.putString("teamb_score",scoreb);
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        String scorea=savedInstanceState.getString("teama_score");
+        String scoreb=savedInstanceState.getString("teamb_score");
+        Log.i(TAG,"onRestoreInstanceState:");
+        ((TextView)findViewById(R.id.score)).setText(scorea);
+        ((TextView)findViewById(R.id.scoreb)).setText(scoreb);
+
+    }
+
     public void btnAdd1(View btn){
         if(btn.getId()==R.id.btn1)
         show(1);

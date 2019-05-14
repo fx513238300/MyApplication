@@ -18,7 +18,7 @@ EditText inp2;
         setContentView(R.layout.activity_rate_calc);
 
         String title=getIntent().getStringExtra("title");
-        getIntent().getFloatExtra("rate",0f);
+       rate=getIntent().getFloatExtra("rate",0f);
 
         Log.i(TAG, "onCreate:title" + title);
         Log.i(TAG, "onCreate:rate" + rate);
@@ -47,7 +47,6 @@ EditText inp2;
                 else{
                     show.setText("");
                 }
-
             }
         });
 
